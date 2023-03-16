@@ -23,14 +23,14 @@ Choose one of the two methods below to install the script and enable the launch 
 After installing [Homebrew](https://brew.sh), execute the following commands:
 
 ```
-brew tap nextfire/tap
+brew tap ranoiaetep/tap
 brew install apple-music-discord-rpc
 brew services restart apple-music-discord-rpc
 ```
 
 These commands
 
-- add [this tap](https://github.com/NextFire/homebrew-tap) to Homebrew,
+- add [this tap](https://github.com/Ranoiaetep/homebrew-tap) to Homebrew,
 - install its `apple-music-discord-rpc` formula (and Deno),
 - enable the launch agent on login and start it.
 
@@ -41,7 +41,7 @@ The `music-rpc.ts` executable is also added to `PATH`.
 ```
 brew services stop apple-music-discord-rpc
 brew remove apple-music-discord-rpc
-brew untap nextfire/tap
+brew untap ranoiaetep/tap
 ```
 
 ### Scripts
