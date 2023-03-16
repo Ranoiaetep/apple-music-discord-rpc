@@ -6,6 +6,7 @@ import type {} from "https://raw.githubusercontent.com/Ranoiaetep/jxa/v0.0.1/run
 import { run } from "https://raw.githubusercontent.com/Ranoiaetep/jxa/v0.0.1/run/mod.ts";
 import type { iTunes } from "https://raw.githubusercontent.com/Ranoiaetep/jxa/v0.0.1/run/types/core.d.ts";
 
+
 // Cache
 
 class Cache {
@@ -125,12 +126,16 @@ function getProps(): Promise<iTunesProps> {
 // iTunes Search API
 
 async function searchAlbum(props: iTunesProps): Promise<iTunesInfos> {
-  const { artist, album } = props;
+  const { name, artist, album } = props;
   const cacheIndex = `${artist} ${album}`;
   let infos = Cache.get(cacheIndex);
 
   if (!infos) {
-    infos = await _searchAlbum(artist.replace(/[.&*~\(\)\{\}]/g, ' '), album.replace(/[.&*~\(\)\{\}]/g, ''));
+    infos = await _searchAlbum(
+      name.replace(/[.,&*~\(\)\{\}・]/g, ' '), 
+      artist.replace(/[.,&*~\(\)\{\}・]/g, ' '), 
+      album.replace(/[.,&*~\(\)\{\}・]/g, '')
+    );
     Cache.set(cacheIndex, infos);
   }
 
@@ -138,31 +143,34 @@ async function searchAlbum(props: iTunesProps): Promise<iTunesInfos> {
 }
 
 async function _searchAlbum(
+  name: string,
   artist: string,
   album: string
 ): Promise<iTunesInfos> {
-  const query = `${artist} ${album}`;
+  const query = `${name} ${artist} ${album}`;
   const params = new URLSearchParams({
-    media: "music",
-    entity: "song",
-    term: album.includes(artist) ? artist : query,
-    // If the album name contains the artist name,
-    // don't limit the results as the first result might not be the right album
-    limit: album.includes(artist) ? "" : "1",
+    types: "songs",
+    term: query,
   });
-  const resp = await fetch(`https://itunes.apple.com/search?${params}`);
+  const resp = await fetch(`https://tools.applemediaservices.com/api/apple-media/music/US/search.json?${params}`);
+  console.log(resp)
   const json: iTunesSearchResponse = await resp.json();
 
-  let result: iTunesSearchResult | undefined;
-  if (json.resultCount > 0) {
-    result = json.results.find((r)=> r.collectionName === album)
+  let result: iTunesSearchSong | undefined;
+  if (json.songs?.data?.length ?? 0 > 0) {
+    result = json.songs?.data?.find((r) => r.attributes?.albumName === album)
     if (result == undefined) {
-      result = json.results[0]
+      result = (json.songs?.data ?? [])[0]
     }
   }
 
-  const artwork = result?.artworkUrl100 ?? null;
-  const url = result?.collectionViewUrl ?? null;
+  let artwork = result?.attributes?.artwork?.url ?? null;
+  if (artwork) {
+    artwork = artwork.replace("{w}", "100")
+    artwork = artwork.replace("{h}", "100")
+  }
+  const url = result?.attributes?.url ?? null;
+  
   return { artwork, url };
 }
 
@@ -268,12 +276,23 @@ interface iTunesInfos {
 }
 
 interface iTunesSearchResponse {
-  resultCount: number;
-  results: iTunesSearchResult[];
+  songs: iTunesSearchResult | null;
 }
 
 interface iTunesSearchResult {
-  artworkUrl100: string;
-  collectionViewUrl: string;
-  collectionName: string;
+  data: iTunesSearchSong[] | null;
+}
+
+interface iTunesSearchSong {
+  attributes: iTunesSearchSongAttributes | null;
+}
+
+interface iTunesSearchSongAttributes {
+  albumName: string | null;
+  artwork: iTunesSearchSongArtwork | null;
+  url: string | null;
+}
+
+interface iTunesSearchSongArtwork {
+  url: string | null
 }
