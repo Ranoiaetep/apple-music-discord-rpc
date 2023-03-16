@@ -2,9 +2,9 @@
 
 import type { Activity } from "https://raw.githubusercontent.com/harmonyland/discord_rpc/ba127c20816af15e2c3cd2c17d81248b097e9bd2/mod.ts";
 import { Client } from "https://raw.githubusercontent.com/harmonyland/discord_rpc/ba127c20816af15e2c3cd2c17d81248b097e9bd2/mod.ts";
-import type {} from "https://raw.githubusercontent.com/NextFire/jxa/64b6de1748ea063c01271edbe9846e37a584e1ab/run/global.d.ts";
-import { run } from "https://raw.githubusercontent.com/NextFire/jxa/64b6de1748ea063c01271edbe9846e37a584e1ab/run/mod.ts";
-import type { iTunes } from "https://raw.githubusercontent.com/NextFire/jxa/64b6de1748ea063c01271edbe9846e37a584e1ab/run/types/core.d.ts";
+import type {} from "https://raw.githubusercontent.com/Ranoiaetep/jxa/v0.0.1/run/global.d.ts";
+import { run } from "https://raw.githubusercontent.com/Ranoiaetep/jxa/v0.0.1/run/mod.ts";
+import type { iTunes } from "https://raw.githubusercontent.com/Ranoiaetep/jxa/v0.0.1/run/types/core.d.ts";
 
 // Cache
 
@@ -130,7 +130,7 @@ async function searchAlbum(props: iTunesProps): Promise<iTunesInfos> {
   let infos = Cache.get(cacheIndex);
 
   if (!infos) {
-    infos = await _searchAlbum(artist, album);
+    infos = await _searchAlbum(artist.replace(/[^a-zA-Z0-9 ]/g, ''), album.replace(/[^a-zA-Z0-9 ]/g, ''));
     Cache.set(cacheIndex, infos);
   }
 
@@ -144,7 +144,7 @@ async function _searchAlbum(
   const query = `${artist} ${album}`;
   const params = new URLSearchParams({
     media: "music",
-    entity: "album",
+    entity: "song",
     term: album.includes(artist) ? artist : query,
     // If the album name contains the artist name,
     // don't limit the results as the first result might not be the right album
