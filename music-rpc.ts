@@ -130,7 +130,7 @@ async function searchAlbum(props: iTunesProps): Promise<iTunesInfos> {
   let infos = Cache.get(cacheIndex);
 
   if (!infos) {
-    infos = await _searchAlbum(artist.replace(/[^a-zA-Z0-9 ]/g, ''), album.replace(/[^a-zA-Z0-9 ]/g, ''));
+    infos = await _searchAlbum(artist.replace(/[.&*~\(\)\{\}]/g, ' '), album.replace(/[.&*~\(\)\{\}]/g, ''));
     Cache.set(cacheIndex, infos);
   }
 
@@ -154,15 +154,11 @@ async function _searchAlbum(
   const json: iTunesSearchResponse = await resp.json();
 
   let result: iTunesSearchResult | undefined;
-  if (json.resultCount === 1) {
-    result = json.results[0];
-  } else if (json.resultCount > 1) {
-    // If there are multiple results, find the right album
-    result = json.results.find((r) => r.collectionName === album);
-  } else if (album.match(/\(.*\)$/)) {
-    // If there are no results, try to remove the part
-    // of the album name in parentheses (e.g. "Album (Deluxe Edition)")
-    return await _searchAlbum(artist, album.replace(/\(.*\)$/, "").trim());
+  if (json.resultCount > 0) {
+    result = json.results.find((r)=> r.collectionName === album)
+    if (result == undefined) {
+      result = json.results[0]
+    }
   }
 
   const artwork = result?.artworkUrl100 ?? null;
